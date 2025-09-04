@@ -47,10 +47,10 @@ void thread_lock_release(thread_lock* lock) {
     enable_interrupts();
 }
 
-// This should be called when the thread has aquired the corresponding thread.
+// This should be called when the thread has aquierd the corresponding lock.
 // This will take the thread off of RUNNING list, release the lock, and then
 // yield control. This should be contained in a while loop where it is called,
-// as a signal does not guerentee that condition is met as it does not run immeditly,
+// as a signal does not guarentee that condition is met as it does not run immediately,
 //, and may need to be waited again.
 void thread_lock_wait(thread_lock* lock, thread_cv* cv) {
     disable_interrupts();
@@ -294,3 +294,11 @@ int thread_create(void* (*routine)(void*), void *arg) {
     enable_interrupts();
     return i;
 }
+
+// Interrupt for context switching
+void __attribute__((interrupt, auto_psv)) _T1Interrupt() { 
+    TMR1 = 0;
+    _T1IF = 0;
+    switch_threads();
+}
+
