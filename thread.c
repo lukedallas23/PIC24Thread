@@ -47,11 +47,13 @@ void thread_lock_release(thread_lock* lock) {
     enable_interrupts();
 }
 
-// This should be called when the thread has aquierd the corresponding lock.
-// This will take the thread off of RUNNING list, release the lock, and then
-// yield control. This should be contained in a while loop where it is called,
-// as a signal does not guarentee that condition is met as it does not run immediately,
-//, and may need to be waited again.
+/*
+    This should be called when the thread has aquierd the corresponding lock.
+    This will take the thread off of RUNNING list, release the lock, and then
+    yield control. This should be contained in a while loop where it is called,
+    as a signal does not guarentee that condition is met as it does not run immediately,
+    , and may need to be waited again.
+*/
 void thread_lock_wait(thread_lock* lock, thread_cv* cv) {
     disable_interrupts();
     *cv |= (1 << running);     // Put this thread in waiting variable
@@ -61,9 +63,11 @@ void thread_lock_wait(thread_lock* lock, thread_cv* cv) {
     thread_lock_aquire(lock);
 }
 
-// Takes the lowest ID thread which is waiting and moves it back to READY.
-// This does not release the lock and execution of the signaled thread does
-// not begin immediatly after this is called.
+/*
+    Takes the lowest ID thread which is waiting and moves it back to READY.
+    This does not release the lock and execution of the signaled thread does
+    not begin immediatly after this is called.
+*/
 void thread_lock_signal(thread_cv* cv) {
     disable_interrupts();
     for (int i = 0; i < max_threads; i++) {
@@ -75,9 +79,11 @@ void thread_lock_signal(thread_cv* cv) {
     enable_interrupts();
 }
 
-// Takes all threads which are waiting and moves them back to READY.
-// This does not release the lock and execution of the signaled threads do
-// not begin immediatly after this is called.
+/*
+    Takes all threads which are waiting and moves them back to READY.
+    This does not release the lock and execution of the signaled threads do
+    not begin immediatly after this is called.
+*/
 void thread_lock_broadcast(thread_cv* cv) {
     disable_interrupts();
     for (int i = 0; i < max_threads; i++) {
@@ -129,10 +135,10 @@ int switch_threads() {
 }
 
 
-// INIT SHOULD
-// Set the bottom thread stack start DONE
-// 
-
+/*
+    Initilize the thread library. Specifies thread size, max amount of threads, and
+    context switching timer.
+*/
 int thread_init(unsigned int s_size, unsigned int max_threads, unsigned int timer_ms){
 
     if (max_threads > 16) max_threads = 16;         // Only supports up to 16 threads
@@ -148,7 +154,6 @@ int thread_init(unsigned int s_size, unsigned int max_threads, unsigned int time
         TCBs[i].join_id = -1;
     }
     
-    // STILL NEED TO INITILIZE A TIMER HERE
     T1CON = 0;
     TMR1 = 0;
     if (timer_ms <= 4) PR1 = timer_ms*16000;
@@ -182,12 +187,16 @@ void thread_yield() {
     _T1IF = 1;
 }
 
-// Block until specified thread is FINISHED. If already finished, then 
-// return with no blocking
-// If join_id is FINISHED - This will not block. That thread is deallocated and taken off FINISHED
-// If join_id is not done - This will block. When the corresponding thread exits, it will unblock this
-// thread
-// Returns 0 on succuss (thread exists) and -1 of failure (thread does not exist)
+/*
+    Block until specified thread is FINISHED. If already finished, then 
+    return with no blocking
+
+    If join_id is FINISHED - This will not block. That thread is deallocated and taken off FINISHED
+    If join_id is not done - This will block. When the corresponding thread exits, it will unblock this
+    thread
+
+    Returns 0 on succuss (thread exists) and -1 of failure (thread does not exist)
+*/
 int thread_join(int join_id){
     disable_interrupts();
     
@@ -221,10 +230,12 @@ int thread_join(int join_id){
     
 }
 
-// Called when a thread finishes executing. Will check if a thread has called join on it
-// a. If yes, that thread becomes READY, this thread gets deallocated
-// b. If no, this thread is added to FINISHED until a thread calls join (join will clean-up)
-// Thread is automatically moved off of READY
+/*
+    Called when a thread finishes executing. Will check if a thread has called join on it
+        a. If yes, that thread becomes READY, this thread gets deallocated
+        b. If no, this thread is added to FINISHED until a thread calls join (join will clean-up)
+    Thread is automatically moved off of READY
+*/
 void thread_exit() {
     
     disable_interrupts();
